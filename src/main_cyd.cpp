@@ -55,6 +55,10 @@
 #define CYD_WIFI_TIME 1
 #endif
 
+#ifndef CYD_SHOW_CLOCK
+#define CYD_SHOW_CLOCK 1
+#endif
+
 #ifndef CYD_WIFI_SSID
 #define CYD_WIFI_SSID ""
 #endif
@@ -958,6 +962,7 @@ void updateAmbientBacklight() {}
 #endif
 
 void renderClockOverlay() {
+#if CYD_SHOW_CLOCK
   if (matrix.foreground == nullptr || clockBaseEpoch <= 0) {
     return;
   }
@@ -1026,6 +1031,7 @@ void renderClockOverlay() {
   drawCenteredPixelText(dateText, centerX,
                         CydMatrixSettings::LOGICAL_HEIGHT - 8, 1, 1,
                         dateColor, shadowColor);
+#endif  // CYD_SHOW_CLOCK
 }
 
 void forceFixedEnvironment() {
