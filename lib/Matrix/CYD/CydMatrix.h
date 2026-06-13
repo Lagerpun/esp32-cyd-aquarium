@@ -77,6 +77,7 @@ class CydMatrix : public Matrix {
   bool isRowBufferActive() const;
   void setBacklightPercent(uint8_t percent);
   uint8_t getBacklightPercent() const;
+  void setColorDiagnostic(bool invert, bool swap);
   void runStartupSmokeTest();
   void update() override;
 };

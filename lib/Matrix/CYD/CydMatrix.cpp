@@ -870,4 +870,9 @@ uint8_t CydMatrix::getBacklightPercent() const {
   return backlightPercent;
 }
 
+void CydMatrix::setColorDiagnostic(bool invert, bool swap) {
+  tft.invertDisplay(invert);
+  tft.setSwapBytes(swap);
+}
+
 #endif  // PANEL_CYD_TFT
