@@ -4,6 +4,12 @@
 
 #include <esp_heap_caps.h>
 
+#if defined(ESP_ARDUINO_VERSION) && ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+#define CYD_LEDC_V3 1
+#else
+#define CYD_LEDC_V3 0
+#endif
+
 #ifndef TFT_BACKLIGHT_ON
 #define TFT_BACKLIGHT_ON HIGH
 #endif
@@ -22,6 +28,10 @@
 
 #ifndef CYD_TFT_BACKLIGHT_PWM_RESOLUTION
 #define CYD_TFT_BACKLIGHT_PWM_RESOLUTION 8
+#endif
+
+#ifndef CYD_TFT_BACKLIGHT_PWM_CHANNEL
+#define CYD_TFT_BACKLIGHT_PWM_CHANNEL 0
 #endif
 
 #ifndef CYD_TFT_SWAP_BYTES
@@ -789,9 +799,16 @@ void CydMatrix::initBacklightPwm() {
 
   pinMode(CydMatrixSettings::TFT_BL_PIN, OUTPUT);
 #if CYD_TFT_BACKLIGHT_PWM
+#if CYD_LEDC_V3
   backlightPwmAttached =
       ledcAttach(CydMatrixSettings::TFT_BL_PIN, CYD_TFT_BACKLIGHT_PWM_FREQ,
                  CYD_TFT_BACKLIGHT_PWM_RESOLUTION);
+#else
+  ledcSetup(CYD_TFT_BACKLIGHT_PWM_CHANNEL, CYD_TFT_BACKLIGHT_PWM_FREQ,
+            CYD_TFT_BACKLIGHT_PWM_RESOLUTION);
+  ledcAttachPin(CydMatrixSettings::TFT_BL_PIN, CYD_TFT_BACKLIGHT_PWM_CHANNEL);
+  backlightPwmAttached = true;
+#endif
   Serial.printf("CYD TFT backlight pwm=%s pin=%d freq=%lu resolution=%u\n",
                 backlightPwmAttached ? "on" : "failed",
                 CydMatrixSettings::TFT_BL_PIN,
@@ -817,7 +834,11 @@ void CydMatrix::writeBacklightPercent(uint8_t percent) {
         (static_cast<uint32_t>(percent) * dutyMax + 50UL) / 100UL;
     const uint32_t outputDuty =
         TFT_BACKLIGHT_ON == HIGH ? onDuty : dutyMax - onDuty;
+#if CYD_LEDC_V3
     ledcWrite(CydMatrixSettings::TFT_BL_PIN, outputDuty);
+#else
+    ledcWrite(CYD_TFT_BACKLIGHT_PWM_CHANNEL, outputDuty);
+#endif
     return;
   }
 
