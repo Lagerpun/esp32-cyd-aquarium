@@ -38,6 +38,12 @@
 #define CYD_TFT_SWAP_BYTES 1
 #endif
 
+// Some CYD panel revisions use BGR color order, which makes blue render as
+// orange/red. Setting this swaps the red and blue channels at output.
+#ifndef CYD_TFT_SWAP_RB
+#define CYD_TFT_SWAP_RB 0
+#endif
+
 #ifndef CYD_TFT_TONE_CORRECTION
 #define CYD_TFT_TONE_CORRECTION 1
 #endif
@@ -310,7 +316,11 @@ uint16_t CydMatrix::packRgb565ForDisplay(uint8_t r, uint8_t g, uint8_t b,
                                 CYD_TFT_TONE_BLACK_THRESHOLD);
   }
 
+#if CYD_TFT_SWAP_RB
+  return tft.color565(color.b, color.g, color.r);
+#else
   return tft.color565(color.r, color.g, color.b);
+#endif
 }
 
 uint16_t CydMatrix::toRgb565(uint8_t r, uint8_t g, uint8_t b) {
