@@ -24,8 +24,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install PlatformIO
-        run: pip install platformio
+      - name: Install PlatformIO and esptool
+        run: pip install platformio esptool
 
       - name: Build firmware
         run: pio run -e esp32-2432s028r
