@@ -7,6 +7,7 @@
 .clang_complete
 .gcc-flags.json
 *.bin
+!static/firmware/**/*.bin
 *.elf
 *.map
 *.d

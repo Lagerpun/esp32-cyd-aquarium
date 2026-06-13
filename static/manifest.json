@@ -1,0 +1,17 @@
+{
+  "name": "ESP32 CYD Aquarium",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "funding_url": "https://ko-fi.com/lagerpun",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "firmware/esp32-2432s028r/merged.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
