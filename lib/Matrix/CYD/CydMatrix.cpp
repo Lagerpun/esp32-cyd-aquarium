@@ -885,9 +885,13 @@ void CydMatrix::setColorDiagnostic(bool invert, bool swap) {
   tft.setSwapBytes(swap);
 }
 
-// Draws seven full-width solid color bars (top to bottom: RED, GREEN, BLUE,
-// YELLOW, CYAN, MAGENTA, WHITE) straight to the panel so the raw channel
-// mapping of this display revision can be read by eye.
+// Draws seven color rows (top to bottom: RED, GREEN, BLUE, YELLOW, CYAN,
+// MAGENTA, WHITE). Each row has three columns so the correct byte-swap setting
+// for the aquarium's pushImage path can be read by eye:
+//   col 0 (left)   = fillRect reference (always correct on this panel)
+//   col 1 (middle) = pushImage with byte-swap ON
+//   col 2 (right)  = pushImage with byte-swap OFF
+// Whichever pushImage column matches the left reference is the right setting.
 void CydMatrix::drawColorTestCard() {
   struct TestBar {
     uint8_t r;
@@ -902,14 +906,43 @@ void CydMatrix::drawColorTestCard() {
   const int16_t w = tft.width();
   const int16_t h = tft.height();
   const int16_t bandHeight = h / count;
+  const int16_t maxBandHeight = h - (count - 1) * bandHeight;
+  const int16_t colWidth = w / 3;
+
+  const size_t bufPixels =
+      static_cast<size_t>(colWidth) * static_cast<size_t>(maxBandHeight);
+  uint16_t* buf = static_cast<uint16_t*>(malloc(bufPixels * sizeof(uint16_t)));
+
+  tft.fillScreen(TFT_BLACK);
   for (uint8_t i = 0; i < count; ++i) {
+    const uint16_t color = tft.color565(bars[i].r, bars[i].g, bars[i].b);
     const int16_t y = i * bandHeight;
     const int16_t bh = (i == count - 1) ? (h - y) : bandHeight;
-    tft.fillRect(0, y, w, bh, tft.color565(bars[i].r, bars[i].g, bars[i].b));
+
+    // Column 0: fillRect reference (correct color on this panel).
+    tft.fillRect(0, y, colWidth, bh, color);
+
+    if (buf != nullptr) {
+      const size_t pixels = static_cast<size_t>(colWidth) * bh;
+      for (size_t p = 0; p < pixels; ++p) {
+        buf[p] = color;
+      }
+      // Column 1: pushImage with byte-swap ON.
+      tft.setSwapBytes(true);
+      tft.pushImage(colWidth, y, colWidth, bh, buf);
+      // Column 2: pushImage with byte-swap OFF.
+      tft.setSwapBytes(false);
+      tft.pushImage(2 * colWidth, y, colWidth, bh, buf);
+    }
   }
+
+  if (buf != nullptr) {
+    free(buf);
+  }
+  tft.setSwapBytes(CYD_TFT_SWAP_BYTES != 0);
   Serial.println(
-      "color test card bars top->bottom: RED GREEN BLUE YELLOW CYAN MAGENTA "
-      "WHITE");
+      "color test card: col0=fillRect ref, col1=pushImage swapON, "
+      "col2=pushImage swapOFF; rows R G B Y C M W");
 }
 
 #endif  // PANEL_CYD_TFT
